@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum accountRole {
+  admin
+  customer
+}
+
+model User {
+  id              String            @id @default(uuid())
+  name            String
+  email           String
+  password        String
+  role            accountRole       @default(customer)
+  contactNo       String
+  address         String
+  profileImg      String
+  reviewAndRating ReviewAndRating[]
+  orders           Order[]
+
+  @@map("users")
+}
+
+model Category {
+  id    String @id @default(uuid())
+  title String
+  books Book[]
+
+  @@map("category")
+}
+
+model Book {
+  id              String            @id @default(uuid())
+  title           String
+  author          String
+  price           Float
+  genre           String
+  publicationDate String
+  categoryId      String
+  category        Category          @relation(fields: [categoryId], references: [id])
+  reviewAndRating ReviewAndRating[]
+
+  @@map("book")
+}
+
+model ReviewAndRating {
+  id     String @id @default(uuid())
+  review String
+  rating Int    @default(5)
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id])
+
+  @@map("review_and_rating")
+}
+
+enum oderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+model Order {
+  id String @id @default(uuid())
+
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
+  orderedBooks Json
+  status       oderStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+
+  @@map("orders")
+}
